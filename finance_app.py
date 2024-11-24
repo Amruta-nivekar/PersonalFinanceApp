@@ -1,20 +1,14 @@
 import sqlite3
 import hashlib
 from datetime import datetime
-
-# Connect to the SQLite database (it will be created if it doesn't exist)
 conn = sqlite3.connect('finance_app.db')
 cursor = conn.cursor()
-
-# --- 1. Create Users Table ---
 cursor.execute('''CREATE TABLE IF NOT EXISTS users (
                   id INTEGER PRIMARY KEY AUTOINCREMENT,
                   username TEXT UNIQUE NOT NULL,
                   hashed_password TEXT NOT NULL)''')
 conn.commit()
 print("Checked/Created 'users' table.")
-
-# --- 2. Create Transactions Table ---
 cursor.execute('''CREATE TABLE IF NOT EXISTS transactions (
                   id INTEGER PRIMARY KEY AUTOINCREMENT,
                   user_id INTEGER,
@@ -26,8 +20,6 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS transactions (
                   FOREIGN KEY (user_id) REFERENCES users (id))''')
 conn.commit()
 print("Checked/Created 'transactions' table.")
-
-# --- 3. Create Budgets Table ---
 cursor.execute('''CREATE TABLE IF NOT EXISTS budgets (
                   id INTEGER PRIMARY KEY AUTOINCREMENT,
                   user_id INTEGER,
@@ -38,8 +30,6 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS budgets (
                   FOREIGN KEY (user_id) REFERENCES users (id))''')
 conn.commit()
 print("Checked/Created 'budgets' table.")
-
-# --- User Registration and Login ---
 def register_user():
     username = input("Enter a username: ").strip()
     password = input("Enter a password: ").strip()
@@ -63,12 +53,11 @@ def login_user():
     
     if result and result[1] == hashed_password:
         print("Login successful!")
-        return result[0]  # Return user_id
+        return result[0]  
     else:
         print("Invalid username or password.")
         return None
-
-# --- Transactions Management ---
+      
 def add_transaction(user_id, trans_type, amount, category, description=""):
     if trans_type.lower() == "expense":
         month = datetime.now().month
@@ -126,31 +115,30 @@ def view_transactions(user_id):
     if not transactions:
         print("No transactions found.")
         return
-    print("\n--- Your Transactions ---")
+    print("\n Your Transactions ")
     for trans in transactions:
         print(f"ID: {trans[0]}, Type: {trans[2]}, Amount: {trans[3]}, Category: {trans[4]}, Description: {trans[5]}, Date: {trans[6]}")
 
-# --- Budget Management ---
 def set_budget(user_id, category, amount, month, year):
-    cursor.execute('''SELECT id FROM budgets 
-                      WHERE user_id = ? AND category = ? AND month = ? AND year = ?''', 
+    cursor.execute("SELECT id FROM budgets 
+                      WHERE user_id = ? AND category = ? AND month = ? AND year = ?", 
                    (user_id, category, month, year))
     result = cursor.fetchone()
     
     if result:
-        cursor.execute('''UPDATE budgets SET amount = ? 
-                          WHERE id = ?''', (amount, result[0]))
+        cursor.execute(" UPDATE budgets SET amount = ? 
+                          WHERE id = ?", (amount, result[0]))
         print("Budget updated successfully.")
     else:
-        cursor.execute('''INSERT INTO budgets (user_id, category, amount, month, year) 
-                          VALUES (?, ?, ?, ?, ?)''', 
+        cursor.execute("INSERT INTO budgets (user_id, category, amount, month, year) 
+                          VALUES (?, ?, ?, ?, ?)", 
                        (user_id, category, amount, month, year))
         print("Budget set successfully.")
     
     conn.commit()
 
 def view_budgets(user_id, month, year):
-    cursor.execute('''SELECT category, amount FROM budgets 
+    cursor.execute(" SELECT category, amount FROM budgets 
                       WHERE user_id = ? AND month = ? AND year = ?''', 
                    (user_id, month, year))
     budgets = cursor.fetchall()
@@ -159,11 +147,11 @@ def view_budgets(user_id, month, year):
         print("No budgets set for this month.")
         return
     
-    print(f"\n--- Budgets for {year}-{month:02} ---")
+    print(f"\n Budgets for {year}-{month:02} ")
     for budget in budgets:
-        print(f"Category: {budget[0]}, Amount: {budget[1]}")
+        print(f"Category: {budget[0]}, Amount: {budget[1]} ")
 
-# --- Financial Reporting ---
+
 def generate_monthly_report(user_id, year, month):
     cursor.execute('''SELECT type, SUM(amount) FROM transactions
                       WHERE user_id = ? AND strftime('%Y', date) = ? AND strftime('%m', date) = ?
@@ -200,10 +188,9 @@ def generate_yearly_report(user_id, year):
     print(f"Total Expenses: {expenses}")
     print(f"Savings: {savings}")
 
-# --- User Menu ---
 def user_menu(user_id):
     while True:
-        print("\n--- User Menu ---")
+        print("\n User Menu ")
         print("1. Add Transaction")
         print("2. Update Transaction")
         print("3. Delete Transaction")
@@ -305,10 +292,9 @@ def user_menu(user_id):
         else:
             print("Invalid choice. Please try again.")
 
-# --- Main Menu ---
 def main_menu():
     while True:
-        print("\n--- Personal Finance Management ---")
+        print("\n Personal Finance Management ")
         print("1. Register")
         print("2. Login")
         print("3. Exit")
@@ -326,7 +312,7 @@ def main_menu():
         else:
             print("Invalid choice. Please try again.")
 
-# Run the application
+
 if __name__ == "__main__":
     main_menu()
     conn.close()
